@@ -6,3 +6,4 @@ pygame
 sklearn
 scipy
 matplotlib
+tweepy
