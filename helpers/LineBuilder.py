@@ -26,7 +26,7 @@ class LineBuilder:
         self.kmeansx = None
 
 
-    def get_best_kmeans(self, k_range=(2, 10)):
+    def get_best_kmeans(self, k_range=(2, 7)):
         def get_top_models(kmeans_models, n=5):
             def perc(a, b):
                 return (a - b)/((a+b)*.5)
