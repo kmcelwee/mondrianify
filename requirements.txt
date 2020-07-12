@@ -1,0 +1,8 @@
+wget
+Pillow
+numpy
+opencv-python
+pygame
+sklearn
+scipy
+matplotlib
