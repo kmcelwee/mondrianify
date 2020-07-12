@@ -144,8 +144,7 @@ class MondrianPipeline:
 
         PIXEL_RANGE = range(200, 2000, 25)
 
-        # url = f'https://source.unsplash.com/random/{random.choice(PIXEL_RANGE)}x{random.choice(PIXEL_RANGE)}'
-        url = f'https://source.unsplash.com/random/600x600'
+        url = f'https://source.unsplash.com/random/{random.choice(PIXEL_RANGE)}x{random.choice(PIXEL_RANGE)}'
 
         r = requests.get(url)
         print(f'Random image url: {r.url}')
@@ -156,9 +155,9 @@ class MondrianPipeline:
 
 def main():
     # image = 'unsplash-random.jpg'
-    image = 'test-fish.jpg'
-    # mp = MondrianPipeline(image, random=True)
-    mp = MondrianPipeline(image)
+    # mp = MondrianPipeline(image)
+    
+    mp = MondrianPipeline(image, random=True)
     mp.apply_image_transform()
 
 
