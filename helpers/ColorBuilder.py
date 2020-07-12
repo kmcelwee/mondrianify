@@ -1,17 +1,5 @@
-import time
-# --------
-
-import os
-import json
-
 from PIL import Image
 import numpy as np
-import cv2
-import pygame
-from sklearn.cluster import KMeans
-from scipy.stats import mode
-import matplotlib.pyplot as plt
-
 from scipy.spatial.distance import euclidean as distance
 
 # from colors import mondrian_palette

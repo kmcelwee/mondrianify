@@ -1,14 +1,8 @@
-import os
-import json
-
 from PIL import Image
 import numpy as np
-import cv2
-import pygame
 from sklearn.cluster import KMeans
 from scipy.stats import mode
 import matplotlib.pyplot as plt
-
 from scipy.spatial.distance import euclidean as distance
 
 class LineBuilder:
@@ -229,6 +223,7 @@ class LineBuilder:
         draw_raw_segments(self.raw_segments, ax)
 
         fig.savefig(filename)
+        plt.close('all')
 
     def save(self, filename):
         self.create_histogram(filename)

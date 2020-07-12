@@ -1,14 +1,5 @@
-import os
-import json
-import wget
-
 from PIL import Image
-import numpy as np
 import cv2
-import pygame
-from sklearn.cluster import KMeans
-from scipy.stats import mode
-import matplotlib.pyplot as plt
 
 class BorderBuilder:
     def __init__(
