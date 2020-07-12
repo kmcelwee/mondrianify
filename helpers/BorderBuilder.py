@@ -1,12 +1,13 @@
 from PIL import Image
 import cv2
+import os
 
 class BorderBuilder:
     def __init__(
         self, 
         image_in,
-        prototxt="hed_model/deploy.prototxt",
-        caffemodel="hed_model/hed_pretrained_bsds.caffemodel",
+        prototxt=os.path.dirname(__file__) + "/hed_model/deploy.prototxt",
+        caffemodel=os.path.dirname(__file__) + "/hed_model/hed_pretrained_bsds.caffemodel",
         hed_threshold=190
     ):
         self.image_in = image_in
