@@ -1,10 +1,19 @@
 # mondrianify
-A pipeline for turning images into paintings by Piet Mondrian. Interested in seeing examples? Check out the Twitter bot [@PietMondrianAI](https://twitter.com/PietMondrianAI) and its respective the repo [mondrian-twitter]](https://github.com/kmcelwee/mondrian-twitter/)].
+A pipeline for turning images into paintings by Piet Mondrian. Interested in seeing examples? Check out the Twitter bot [@PietMondrianAI](https://twitter.com/PietMondrianAI) and its respective repo [mondrian-twitter]](https://github.com/kmcelwee/mondrian-twitter/)].
 
 ![Mondrianify flowchart](flowchart.png)
 
 ### Getting setup locally
-Python version 3.7, run `pip install -r requirements.txt`. Then running `python MondrianPipeline.py` will draw a random photo from [Unsplash](https://unsplash.com/developers) and apply the transformation. The default directory `output` will be created and the image files will be placed inside.
+Using Python version 3.7, run `pip install -r requirements.txt`. Then run `python MondrianPipeline.py`. The script will draw a random photo from [Unsplash](https://unsplash.com/developers) and apply the transformation. The default directory `output` will be created and the image files will be placed inside. Similar to [mondrian-twitter](https://github.com/kmcelwee/mondrian-twitter/), you can import this code by cloning this repository, placing it as a subdirectory, and running:
+
+```python
+from mondrianify.MondrianPipeline import MondrianPipeline
+
+random = True
+mp = MondrianPipeline(tmp_image_in, random=random)
+mp.apply_image_transform()
+
+```
 
 ### MondrianPipline.py
 The overarching class to help usher an image through the entire transformation. As it steps through the pipeline, it periodically saves the images output by the helper classes to a defined output directory. It relies on the classes in `helpers` to complete most phases of the process.
