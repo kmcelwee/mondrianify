@@ -40,9 +40,16 @@ class Painting:
 
 
     def draw_border(self):
-        # todo
-        pass
-        # pygame.draw.rect(self.surface, pygame.Color('#000000'), [0, 0, self.width, self.height], width=1)
+        # pygame has some weird border issues
+        # This needs to be fixed in the longterm
+        height_border = self.height - 2
+        width_border = self.width - 3
+        border_line_width = self.line_width + 2
+
+        pygame.draw.line(self.surface, pygame.Color('#000000'), [0, 0], [0, height_border], border_line_width)
+        pygame.draw.line(self.surface, pygame.Color('#000000'), [width_border, 0], [width_border, height_border], border_line_width)
+        pygame.draw.line(self.surface, pygame.Color('#000000'), [0, height_border], [width_border, height_border], border_line_width)
+        pygame.draw.line(self.surface, pygame.Color('#000000'), [0, 0], [width_border, 0], border_line_width)
 
 
     def create(self):

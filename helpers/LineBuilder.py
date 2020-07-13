@@ -26,7 +26,7 @@ class LineBuilder:
         self.kmeansx = None
 
 
-    def get_best_kmeans(self, k_range=(2, 10)):
+    def get_best_kmeans(self, k_range=(2, 7)):
         def get_top_models(kmeans_models, n=5):
             def perc(a, b):
                 return (a - b)/((a+b)*.5)
@@ -102,11 +102,11 @@ class LineBuilder:
     def clean_raw_segments(self):
         def intersects_y(y, seg):
             low_y, high_y = min(seg[1][1], seg[0][1]), max(seg[1][1], seg[0][1])
-            return low_y < y < high_y
+            return low_y <= y <= high_y
 
         def intersects_x(x, seg):
             low_x, high_x = min(seg[1][0], seg[0][0]), max(seg[1][0], seg[0][0])
-            return low_x < x < high_x
+            return low_x <= x <= high_x
         
         width = self.width
         height = self.height
