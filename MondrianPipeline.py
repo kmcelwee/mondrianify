@@ -142,10 +142,9 @@ class MondrianPipeline:
         if os.path.exists(self.image_in):
             os.remove(self.image_in)
 
-        PIXEL_RANGE = range(200, 2000, 25)
+        PIXEL_RANGE = range(200, 1000, 25)
 
-        # url = f'https://source.unsplash.com/random/{random.choice(PIXEL_RANGE)}x{random.choice(PIXEL_RANGE)}'
-        url = 'https://images.unsplash.com/photo-1592338161201-b85bc59d824e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=875&ixlib=rb-1.2.1&q=80&w=525'
+        url = f'https://source.unsplash.com/random/{random.choice(PIXEL_RANGE)}x{random.choice(PIXEL_RANGE)}'
 
         r = requests.get(url)
         print(f'Random image url: {r.url}')
