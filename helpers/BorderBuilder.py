@@ -3,6 +3,9 @@ import cv2
 import os
 
 class BorderBuilder:
+    """BorderBuilder is a class that helps apply Holisticly-Nested Edge Detection
+    to an image so that we can get the major features of an image.
+    """
     def __init__(
         self, 
         image_in,
@@ -15,10 +18,13 @@ class BorderBuilder:
         self.caffemodel = caffemodel
         self.hed_threshold = hed_threshold
 
+        # Vars to be set later
         self.hed = None
         self.pos_ids = None
 
     def apply_hed(self):
+        """Apply HED to the input image"""
+        # Load neural network
         net = cv2.dnn.readNetFromCaffe(
             self.prototxt, 
             self.caffemodel
@@ -33,6 +39,7 @@ class BorderBuilder:
             swapRB=False, crop=False
         )
 
+        # Apply neural network and store output image
         net.setInput(blob)
         hed = net.forward()
         hed = cv2.resize(hed[0, 0], (W, H))
@@ -41,23 +48,29 @@ class BorderBuilder:
         self.hed = hed
 
     def save_hed(self, file):
+        """Save HED's output image to the given file"""
         cv2.imwrite(file, self.hed)
 
 
     def apply_hed_threshold(self):
-        n = self.hed
-        n[n < self.hed_threshold] = 0
-        n[n >= self.hed_threshold] = 250
+        """Apply a cutoff so that all values in the array are minmaxed 
+        into a binary.
+        """
+        n_array = self.hed
+        n_array[n_array < self.hed_threshold] = 0
+        n_array[n_array >= self.hed_threshold] = 250
 
-        self.pos_ids = n
+        self.pos_ids = n_array
 
 
     def save_threshold(self, file):
+        """Save the threshold image into the given file"""
         im2 = Image.fromarray(self.pos_ids)
         im2.save(file)
 
 
 class CropLayer(object):
+    """A class helper to ensure that the HED cropper is properly configured"""
     def __init__(self, params, blobs):
         # initialize our starting and ending (x, y)-coordinates of
         # the crop
@@ -89,5 +102,8 @@ class CropLayer(object):
         return [inputs[0][:, :, self.startY:self.endY,
                 self.startX:self.endX]]
 
-# from CropLayer import CropLayer
+# HACK: We need to add this layer, but it can only be done once, and it seems
+#   like cv2 keeps settings from previous runs to save on memory? And there's no 
+#   straightforward way to ensure that this crop layer was added. Loading it once 
+#   outside the class seems to work best.
 cv2.dnn_registerLayer("Crop", CropLayer)

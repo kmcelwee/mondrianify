@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import euclidean as distance
 
 class LineBuilder:
-    """create the segments from an image"""
+    """Create the segments from an image"""
     def __init__(self, image_in, min_percent_split=.1):
         self.image_in = image_in
         self.min_percent_split = min_percent_split
@@ -20,6 +20,7 @@ class LineBuilder:
         self.all_x = self.pos_ids[:, 1]
         self.all_y = self.pos_ids[:, 0]
 
+        # Vars to set later
         self.segments = None
         self.raw_segments = None
         self.kmeansy = None
@@ -27,9 +28,14 @@ class LineBuilder:
 
 
     def get_best_kmeans(self, k_range=(2, 7)):
+        """Run kmeans models on the x axis and the y axis for the given k_range"""
         def get_top_models(kmeans_models, n=5):
+            """Given a list of kmeans models, use "max percent difference" as a 
+            heuristic to determine which model has the appropriate number of clusters.
+            """
             def perc(a, b):
-                return (a - b)/((a+b)*.5)
+                """get the percent difference between two values"""
+                return abs(a - b)/((a+b)*.5)
             
             inertias = [x.inertia_ for x in kmeans_models]
             perc_diff = [perc(inertias[x], inertias[x+1]) for x, _ in enumerate(inertias[:-1])]
@@ -42,6 +48,7 @@ class LineBuilder:
             
             return [m for i, m in enumerate(kmeans_models) if i in model_indices]
 
+        # Create a kmeans model for x and y with n_clusters equal to each value in k_range
         all_kmeansy = [KMeans(n_clusters=i).fit(self.all_y.reshape(-1, 1)) for i in range(*k_range)]
         all_kmeansx = [KMeans(n_clusters=i).fit(self.all_x.reshape(-1, 1)) for i in range(*k_range)]
 
@@ -52,23 +59,33 @@ class LineBuilder:
         self.kmeansx = top_kmeansx[0]
 
 
-    def get_raw_segments(self, q=0.05):
-        def threshold_split(l):
-            max_diff = int(self.min_percent_split * self.width)
+    def get_raw_segments(self, buffer_quantile=0.05):
+        """Combine logic with the kmeans models to get the raw segments"""
+        def threshold_split(input_l, min_percent_split):
+            """Split an input list if the difference between any values is 
+            greater than the given threshold
+            """
+            max_diff = int(min_percent_split * self.width)
             return_l = []
-            l = sorted(l)
+
+            # Make sure the list is sorted
+            input_l = sorted(input_l)
             
+            # Add values to `contiguous` unless the difference between the values
+            #   is too great, then append to the return list.
             contiguous = []
-            for i, t in enumerate(l[:-1]):
-                if l[i+1] - l[i] > max_diff:
+            for i, val in enumerate(input_l[:-1]):
+                if input_l[i+1] - input_l[i] > max_diff:
                     return_l.append(contiguous)
                     contiguous = []
                 else:
-                    contiguous.append(t)
+                    contiguous.append(val)
             if contiguous != []:
                 return_l.append(contiguous)
             
+            # Filter out any lists that are only one point long
             return_l = [x for x in return_l if len(x) > 1]
+
             return return_l
 
         raw_segments = []
@@ -76,15 +93,23 @@ class LineBuilder:
 
         kmeans = self.kmeansx
         for cc_x, label in zip(kmeans.cluster_centers_, range(kmeans.n_clusters)):
+            # get the mode of the x values in this cluster
             group_x = all_x[kmeans.labels_ == label]
             m = mode(group_x).mode[0]
             group_x = group_x.tolist()
+
+            # get all the y values that correspond to the x values in this cluster
             y_bound = [p[0] for p in self.pos_ids if p[1] in group_x]
             assert len(y_bound) == len(group_x)
-            y_bounds = threshold_split(y_bound)
-            for yb in y_bounds:
-                raw_segments.append([[m, np.quantile(yb, q)], [m, np.quantile(yb, 1-q)]])
 
+            # Use the range of those y values to create the segments
+            #   Use `buffer_quantile` as a way to drop outliers and `threshold_split`
+            #   as a way to help split up multimodal distributions
+            y_bounds = threshold_split(y_bound, self.min_percent_split)
+            for yb in y_bounds:
+                raw_segments.append([[m, np.quantile(yb, buffer_quantile)], [m, np.quantile(yb, 1-buffer_quantile)]])
+
+        # repeat for y
         kmeans = self.kmeansy
         for cc_y, label in zip(kmeans.cluster_centers_, range(kmeans.n_clusters)):
             group_y = all_y[kmeans.labels_ == label]
@@ -92,9 +117,9 @@ class LineBuilder:
             group_y = group_y.tolist()
             x_bound = [p[1] for p in self.pos_ids if p[0] in group_y]
             assert len(x_bound) == len(group_y)
-            x_bounds = threshold_split(x_bound)
+            x_bounds = threshold_split(x_bound, self.min_percent_split)
             for xb in x_bounds:
-                raw_segments.append([[np.quantile(xb, q), m], [np.quantile(xb, 1-q), m]])
+                raw_segments.append([[np.quantile(xb, buffer_quantile), m], [np.quantile(xb, 1-buffer_quantile), m]])
 
         self.raw_segments = raw_segments
 
@@ -111,31 +136,40 @@ class LineBuilder:
         width = self.width
         height = self.height
 
+        # new_segments will be the final framework for our painting's lines
         new_segments = {
             'x': [[[0, 0], [0, height]], [[width, 0], [width, height]]],
             'y': [[[0, 0], [width, 0]], [[0, height], [width, height]]]
         } 
 
-        a = 0 # shorthand for "any index"
+        # a shorthand for "any index"
+        a = 0
+
+        # sort raw segments in descending order by size so that we prioritize larger segments
         raw_segments_sorted = sorted(self.raw_segments, key=lambda x: -distance(x[0], x[1]))
 
+        # extend each raw segment to the closest existing line
         for seg in raw_segments_sorted:
             (x1, y1), (x2, y2) = seg
             if y1 == y2:
                 y = y1
                 x1, x2 = min([x1, x2]), max([x1, x2])
                 
+                # get the closest vertical segment that
                 new_x1 = min([
                     { 'new_x': seg[a][0], 'delta': abs(x1 - seg[a][0]) }
                  for seg in new_segments['x'] if intersects_y(y, seg)
                 ], key=lambda t: t['delta'])['new_x']
                 
+                # repeat the process, but don't let the segment collapse to a point.
                 new_x2 = min([
                     { 'new_x': seg[a][0], 'delta': abs(seg[a][0] - x2) }
                  for seg in new_segments['x'] if seg[a][0] != new_x1 and intersects_y(y, seg)
                 ], key=lambda t: t['delta'])['new_x']
                 
                 new_segments['y'].append([[new_x1, y], [new_x2, y]])
+            
+            # repeat for vertical segments
             else:
                 x = x1
                 y1, y2 = min([y1, y2]), max([y1, y2])
@@ -153,38 +187,31 @@ class LineBuilder:
         self.segments = new_segments
 
 
-    def analyze_image(self):        
+    def analyze_image(self):
+        """Usher image through pipeline"""    
         self.get_best_kmeans()
         self.get_raw_segments()
         self.clean_raw_segments()
 
 
     def create_histogram(self, filename, hist_size=0.65, fig_size=8):
+        """Put histograms on the axes and sketch the raw segments to help 
+        understand what the kmeans models are doing.
+        """
         def draw_raw_segments(raw_segments, ax):
+            """Place the raw segments onto the given axis"""
             for seg in raw_segments:
                 (x1, y1), (x2, y2) = seg
                 width = self.width
                 height = self.height
+
+                # matplotlib draws lines as percentages and the y axis is flipped
+                #   so we need to divide by height and width, and subtract the value
+                #   from 1 for vertical segments
                 if x1 == x2:
                     ax.axvline(linestyle='--', x=x1, color='gray', ymin=(1-y1/height), ymax=(1-y2/height))
                 else:
                     ax.axhline(linestyle='--', y=y1, color='gray', xmin=(x1/width), xmax=(x2/width))
-
-
-        def scatter_hist(x, y, ax, ax_histx, ax_histy):
-            ax_histx.tick_params(axis="x", labelbottom=False)
-            ax_histx.tick_params(axis="y", labelleft=False, left=False)
-            ax_histy.tick_params(axis="x", labelbottom=False, bottom=False)
-            ax_histy.tick_params(axis="y", labelleft=False)
-
-            ax.imshow(Image.open(self.image_in), cmap='Greys')
-
-            bin_proportion = 0.6
-            binsx = int(self.width*bin_proportion)
-            binsy = int(self.height*bin_proportion)
-            
-            ax_histx.hist(x, bins=binsx, color="k")
-            ax_histy.hist(y, bins=binsy, orientation='horizontal', color="k")
 
         x = self.all_x
         y = self.all_y
@@ -218,7 +245,19 @@ class LineBuilder:
         ax_histy.spines['right'].set_visible(False)
         ax_histy.spines['bottom'].set_visible(False)
 
-        scatter_hist(x, y, ax, ax_histx, ax_histy)
+        ax_histx.tick_params(axis="x", labelbottom=False)
+        ax_histx.tick_params(axis="y", labelleft=False, left=False)
+        ax_histy.tick_params(axis="x", labelbottom=False, bottom=False)
+        ax_histy.tick_params(axis="y", labelleft=False)
+
+        ax.imshow(Image.open(self.image_in), cmap='Greys')
+
+        bin_proportion = 0.6
+        binsx = int(self.width*bin_proportion)
+        binsy = int(self.height*bin_proportion)
+        
+        ax_histx.hist(x, bins=binsx, color="k")
+        ax_histy.hist(y, bins=binsy, orientation='horizontal', color="k")
         
         draw_raw_segments(self.raw_segments, ax)
 
@@ -226,4 +265,5 @@ class LineBuilder:
         plt.close('all')
 
     def save(self, filename):
+        """Save the histogram to filename"""
         self.create_histogram(filename)

@@ -1,3 +1,5 @@
+"""Palette of colors collected from Mondrian's paintings"""
+
 mondrian_palette = {
     "red2": {
         "rgb": [

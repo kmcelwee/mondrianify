@@ -7,11 +7,13 @@ from PIL import Image
 import requests
 import numpy as np
 import cv2
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-import pygame
 from sklearn.cluster import KMeans
 from scipy.stats import mode
 import matplotlib.pyplot as plt
+
+# pygame is great but I need clean logs
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" 
+import pygame
 
 from helpers.BorderBuilder import BorderBuilder
 from helpers.LineBuilder import LineBuilder
@@ -19,6 +21,9 @@ from helpers.ColorBuilder import ColorBuilder
 from helpers.Painting import Painting
 
 class MondrianPipeline:
+    """The full input to output pipeline for transforming an image into a 
+    Mondrian painting
+    """
     def __init__(self, 
         image_in,
         random=False,
@@ -39,11 +44,13 @@ class MondrianPipeline:
 
         self.step = 0
 
+        # Vars to be set later
         self.line_builder = None
         self.color_builder = None
         self.painting = None
 
     def _step_files_forward(self, function):
+        """Step the pipeline forward and name the new file after the current function"""
         old_file = self.image_in
         new_file = os.path.join(self.output_dir, f'{self.step}-{function}.jpg')
         self.image_in = new_file
@@ -52,6 +59,9 @@ class MondrianPipeline:
 
 
     def resize(self):
+        """Proportionally resize the input image so that the max height or 
+        width is not bigger than SIZE
+        """
         old_file, new_file = self._step_files_forward('resize')
 
         im = Image.open(old_file)
@@ -69,12 +79,14 @@ class MondrianPipeline:
 
 
     def find_primary_colors(self):
+        """Make a ColorBuilder"""
         color_builder = ColorBuilder(self.image_in)
         color_builder.get_color_point()
         self.color_builder = color_builder
 
     
     def find_borders(self):
+        """Make a BorderBuilder and save the images"""
         old_file, new_file = self._step_files_forward('apply-hed')
 
         border_builder = BorderBuilder(old_file)
@@ -89,6 +101,7 @@ class MondrianPipeline:
 
 
     def find_structure(self):
+        """Make a LineBuilder and save the image"""
         old_file, new_file = self._step_files_forward('find-structure')
 
         line_builder = LineBuilder(old_file)
@@ -99,6 +112,7 @@ class MondrianPipeline:
 
 
     def create_painting(self):
+        """Make a Painting and save the image"""
         old_file, new_file = self._step_files_forward('create-painting')
 
         segments = self.line_builder.segments
@@ -111,6 +125,7 @@ class MondrianPipeline:
 
 
     def create_overlay(self):
+        """Convert to PNGs and overlay the input image on top of the painting"""
         old_file, new_file = self._step_files_forward('create-overlay')
 
         resize_im = [self.output_dir + x for x in os.listdir(self.output_dir) if 'resize' in x][0]
@@ -127,6 +142,7 @@ class MondrianPipeline:
 
 
     def apply_image_transform(self):
+        """Usher the user through the pipeline"""
         self.resize()
         
         self.find_primary_colors()
@@ -139,6 +155,7 @@ class MondrianPipeline:
 
 
     def get_random_image(self):
+        """Download random image of random dimensions from Unsplash"""
         if os.path.exists(self.image_in):
             os.remove(self.image_in)
 
