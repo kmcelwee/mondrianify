@@ -10,12 +10,12 @@ Using Python version 3.7, run `pip install -r requirements.txt`. Then run `pytho
 from mondrianify.MondrianPipeline import MondrianPipeline
 
 random = True
-mp = MondrianPipeline(tmp_image_in, random=random)
+mp = MondrianPipeline(image_path, random=random)
 mp.apply_image_transform()
 
 ```
 
-### MondrianPipline.py
+### MondrianPipeline.py
 The overarching class to help usher an image through the entire transformation. As it steps through the pipeline, it periodically saves the images output by the helper classes to a defined output directory. It relies on the classes in `helpers` to complete most phases of the process.
 
 ### Helpers
