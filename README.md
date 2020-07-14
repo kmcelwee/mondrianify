@@ -1,10 +1,10 @@
 # mondrianify
-A pipeline for turning images into paintings by Piet Mondrian. Interested in seeing examples? Check out the Twitter bot [@PietMondrianAI](https://twitter.com/PietMondrianAI) and its respective repo [mondrian-twitter](https://github.com/kmcelwee/mondrian-twitter/).
+A pipeline for turning images into paintings by Piet Mondrian. Interested in seeing examples? Check out the Twitter bot [@PietMondrianAI](https://twitter.com/PietMondrianAI) and its respective repo [mondrianify-twitter](https://github.com/kmcelwee/mondrianify-twitter/).
 
 ![Mondrianify flowchart](flowchart.png)
 
 ### Getting setup locally
-Using Python version 3.7, run `pip install -r requirements.txt`. Then run `python MondrianPipeline.py`. The script will draw a random photo from [Unsplash](https://unsplash.com/developers) and apply the transformation. The default directory `output` will be created and the image files will be placed inside. Similar to [mondrian-twitter](https://github.com/kmcelwee/mondrian-twitter/), you can import this code by cloning this repository, placing it as a subdirectory, and running:
+Using Python version 3.7, run `pip install -r requirements.txt`. Then run `python MondrianPipeline.py`. The script will draw a random photo from [Unsplash](https://unsplash.com/developers) and apply the transformation. The default directory `output` will be created and the image files will be placed inside. Similar to [mondrianify-twitter](https://github.com/kmcelwee/mondrianify-twitter/), you can import this code by cloning this repository, placing it as a subdirectory, and running:
 
 ```python
 from mondrianify.MondrianPipeline import MondrianPipeline
