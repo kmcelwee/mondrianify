@@ -1,0 +1,17 @@
+Mondrianify(input_image, **kwargs)
+    IMAGES
+    input_image
+    hed_image
+    hed_image_threshold
+    segments_diagram
+    segments_image
+    transformed_image
+    overlay_image
+
+    OTHER ATTRIBUTES
+    segments
+    framework
+    color_point
+    color_box
+    color
+    static_configs # anything in **kwargs can overwrite these
